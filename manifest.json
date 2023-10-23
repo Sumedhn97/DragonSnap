@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "DragonSnap",
+  "description": "Capture screenshots from multiple webpages, compile them, and save as a PDF on your local device.",
+  "version": "1.0",
+  "permissions": ["activeTab", "downloads"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "48": "icon.png"
+  },
+  "action": {
+    "default_icon": "icon.png",
+    "default_popup": "popup.html"
+  }
+}
