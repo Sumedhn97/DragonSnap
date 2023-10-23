@@ -47,4 +47,4 @@ Voila! You're all set to capture, compile, and download with DragonSnap!
 
 ## License
 
-DragonSnap is licensed under the MIT license.
+DragonSnap is licensed under the MIT license. For more information, please refer to the [license](LICENSE) file in the repository.
