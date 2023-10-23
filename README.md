@@ -45,6 +45,14 @@ Currently, DragonSnap is not available on the official web store. However, you c
 
 Voila! You're all set to capture, compile, and download with DragonSnap!
 
+## Contributing
+
+This is an active repository and your contributions are always welcome!
+
+Please read CONTRIBUTING.md to get started.
+
+---
+
 ## License
 
 DragonSnap is licensed under the MIT license. For more information, please refer to the [license](LICENSE) file in the repository.
