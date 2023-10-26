@@ -1,98 +1,74 @@
-window.jsPDF = window.jspdf.jsPDF;
-let screenshots = []; // Initialize the array
+// popup.js
 
-// Function to add a screenshot to the background script
+// Reference to jsPDF
+window.jsPDF = window.jspdf.jsPDF;
+
+// Initialize the array to hold screenshots
+let screenshots = [];
+
+// Function to open the cropping page with the screenshot
 function addScreenshot(screenshotUrl) {
-  chrome.runtime.sendMessage({ action: "addScreenshot", screenshotUrl });
+  chrome.tabs.create({ url: `crop.html?imgUrl=${encodeURIComponent(screenshotUrl)}` });
 }
 
-// Function to get the screenshots from the background script
+// Function to retrieve screenshots from the background script
 function getScreenshots(callback) {
   chrome.runtime.sendMessage({ action: "getScreenshots" }, function(response) {
     callback(response.screenshots);
   });
 }
 
-
-// Function to clear the screenshots from the background script
+// Function to clear screenshots from the background script
 function clearScreenshots(callback) {
   chrome.runtime.sendMessage({ action: "clearScreenshots" }, function(response) {
     callback(response.status);
   });
 }
 
-
-// Capture and add a screenshot
+// Event listener for capturing and adding a screenshot
 document.getElementById("screenshot-button").addEventListener("click", function() {
-  // Get the button element
   var button = document.getElementById("screenshot-button");
-  
-  // Disable the button to prevent further clicks
-  button.disabled = true;
+  button.disabled = true;  // Disable button to prevent further clicks
 
-  // Delay the screenshot capture by 1 second (1000 milliseconds)
   setTimeout(function() {
-      chrome.tabs.captureVisibleTab(null, {}, function(screenshotUrl) {
-          // Send the screenshot to the background script for storage
-          addScreenshot(screenshotUrl);
+    chrome.tabs.captureVisibleTab(null, {}, function(screenshotUrl) {
+      addScreenshot(screenshotUrl);  // Open the cropping page with the screenshot
 
-          // The rest of your code here, including displaying the small preview on the canvas
-          var canvas = document.getElementById("screenshot-canvas");
-          var ctx = canvas.getContext("2d");
-          var img = new Image();
-
-          img.src = screenshotUrl;
-          img.onload = function() {
-              // Define the dimensions for the small preview
-              var previewWidth = 200; // Adjust as needed
-              var previewHeight = (previewWidth * img.height) / img.width;
-
-              // Set canvas dimensions for the small preview
-              canvas.width = previewWidth;
-              canvas.height = previewHeight;
-
-              // Draw the small preview on the canvas
-              ctx.drawImage(img, 0, 0, previewWidth, previewHeight);
-          };
-      });
-
-      // Re-enable the button after the timeout has elapsed
-      button.disabled = false;
+      button.disabled = false;  // Re-enable button after timeout
+    });
   }, 1000);  // 1000 milliseconds delay
 });
 
-
-
-// Generate PDF using stored screenshots
+// Event listener for generating PDF using stored screenshots
 document.getElementById("generate-pdf-button").addEventListener("click", function() {
   generatePDF();
 });
 
 function generatePDF() {
   getScreenshots(function(screenshots) {
-      if (screenshots.length === 0) {
-          console.log('No screenshots to generate PDF.');
-          return;
-      }
+    if (screenshots.length === 0) {
+      console.log('No screenshots to generate PDF.');
+      return;
+    }
 
-      const pdf = new jsPDF();
-      let imgCount = 0;
+    const pdf = new jsPDF();
+    let imgCount = 0;
 
-      function addImageToPdf(imgUrl) {
-          loadImage(imgUrl, function(img) {
-              pdf.addImage(imgUrl, 'PNG', 10, 10, 190, (190 * img.height) / img.width);
-              imgCount++;
+    function addImageToPdf(imgUrl) {
+      loadImage(imgUrl, function(img) {
+        pdf.addImage(imgUrl, 'PNG', 10, 10, 190, (190 * img.height) / img.width);
+        imgCount++;
 
-              if (imgCount === screenshots.length) {
-                  finalizePDF(pdf);
-              } else {
-                  pdf.addPage();
-                  addImageToPdf(screenshots[imgCount]);  // Add the next image
-              }
-          });
-      }
+        if (imgCount === screenshots.length) {
+          finalizePDF(pdf);
+        } else {
+          pdf.addPage();
+          addImageToPdf(screenshots[imgCount]);  // Add the next image
+        }
+      });
+    }
 
-      addImageToPdf(screenshots[0]);  // Start adding images to PDF
+    addImageToPdf(screenshots[0]);  // Start adding images to PDF
   });
 }
 
@@ -100,15 +76,27 @@ function loadImage(imgUrl, callback) {
   const img = new Image();
   img.src = imgUrl;
   img.onload = function() {
-      callback(img);
+    callback(img);
   };
 }
 
 function finalizePDF(pdf) {
-  const filename = document.getElementById("filename-input").value || 'screenshots.pdf';
+  const filename = `screenshots_${new Date().toISOString().replace(/[^0-9]/g, '')}.pdf`;
   pdf.save(filename);
 
   clearScreenshots(function(status) {
-      console.log(status);  // Logs "Screenshots cleared"
+    console.log(status);  // Logs "Screenshots cleared"
+    updateScreenshotCount();
   });
 }
+
+// Function to update the screenshot count display
+function updateScreenshotCount() {
+  getScreenshots(function(screenshots) {
+      const count = screenshots.length;
+      document.getElementById('screenshot-count').textContent = `Stored Screenshots: ${count}`;
+  });
+}
+
+// Update the screenshot count display when the popup is loaded
+document.addEventListener('DOMContentLoaded', updateScreenshotCount);
